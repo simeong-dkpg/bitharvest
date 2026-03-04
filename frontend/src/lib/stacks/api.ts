@@ -1,4 +1,5 @@
 import { NETWORK_CONFIG, type NetworkType } from "./config";
+import { principalCV, cvToHex } from "@stacks/transactions";
 
 // --- Rate Limiting & Caching ---
 
@@ -46,6 +47,11 @@ export function parseClarityUint(val: { value: string } | string | number): numb
 export function parseClarityBool(val: { value: boolean } | boolean): boolean {
   if (typeof val === "boolean") return val;
   return val.value;
+}
+
+// Encode a principal address for read-only contract calls
+export function encodePrincipal(address: string): string {
+  return cvToHex(principalCV(address));
 }
 
 // --- Read-Only Contract Calls ---

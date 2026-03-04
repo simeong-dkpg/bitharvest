@@ -1,5 +1,13 @@
+/**
+ * useContractTransaction - Modern Stacks Connect implementation
+ * 
+ * Uses request('stx_callContract', ...) from @stacks/connect v8.x
+ */
+
 import { useState, useCallback } from "react";
 import { useQueryClient } from "@tanstack/react-query";
+import { request } from "@stacks/connect";
+import { Cl } from "@stacks/transactions";
 import { toast } from "sonner";
 import { CONTRACT_ERRORS, NETWORK_CONFIG, DEFAULT_NETWORK } from "@/lib/stacks/config";
 import type { TransactionStep } from "@/components/TransactionModal";
@@ -10,6 +18,7 @@ interface ContractCallOptions {
   functionName: string;
   functionArgs: any[];
   postConditions?: any[];
+  postConditionMode?: "allow" | "deny";
 }
 
 type TransactionBuilder = () => ContractCallOptions;
@@ -45,43 +54,53 @@ export function useContractTransaction(options: UseContractTransactionOptions = 
       setStep("confirming");
       const callOptions = builder();
 
-      const { openContractCall } = await import("@stacks/connect");
-
-      await openContractCall({
-        ...callOptions,
-        network: DEFAULT_NETWORK === "testnet" ? "testnet" : "mainnet",
-        onFinish: (data: any) => {
-          const id = data.txId || data.txid;
-          setTxId(id);
-          setStep("broadcasting");
-
-          // Simulate broadcast confirmation after delay (real app would poll)
-          setTimeout(() => {
-            setStep("success");
-            toast.success("Transaction confirmed", {
-              description: id ? `TX: ${id.slice(0, 8)}...${id.slice(-6)}` : undefined,
-              duration: 5000,
-            });
-
-            // Invalidate queries
-            const keys = options.invalidateKeys || [];
-            const defaultKeys = [
-              ["vaultData"],
-              ...(options.address ? [["userPosition", options.address], ["transactionHistory", options.address]] : []),
-            ];
-            [...defaultKeys, ...keys].forEach((key) =>
-              queryClient.invalidateQueries({ queryKey: key })
-            );
-
-            options.onSuccess?.();
-          }, 3000);
-        },
-        onCancel: () => {
-          setStep("input");
-        },
+      // Build contract principal
+      const contract = `${callOptions.contractAddress}.${callOptions.contractName}`;
+      
+      // Use the modern request API
+      const result = await request("stx_callContract", {
+        contract,
+        functionName: callOptions.functionName,
+        functionArgs: callOptions.functionArgs,
+        network: DEFAULT_NETWORK,
+        postConditions: callOptions.postConditions || [],
+        postConditionMode: callOptions.postConditionMode || "deny",
+        sponsored: false,
       });
+
+      const id = result.txid || result.txId;
+      setTxId(id);
+      setStep("broadcasting");
+
+      // Poll for confirmation or simulate delay
+      setTimeout(() => {
+        setStep("success");
+        toast.success("Transaction submitted", {
+          description: id ? `TX: ${id.slice(0, 8)}...${id.slice(-6)}` : undefined,
+          duration: 5000,
+        });
+
+        // Invalidate queries
+        const keys = options.invalidateKeys || [];
+        const defaultKeys = [
+          ["vaultData"],
+          ...(options.address ? [["userPosition", options.address], ["transactionHistory", options.address]] : []),
+        ];
+        [...defaultKeys, ...keys].forEach((key) =>
+          queryClient.invalidateQueries({ queryKey: key })
+        );
+
+        options.onSuccess?.();
+      }, 2000);
+
     } catch (error: any) {
       console.error("Transaction error:", error);
+
+      // User cancelled
+      if (error?.message?.includes("cancel") || error?.message?.includes("rejected")) {
+        setStep("input");
+        return;
+      }
 
       // Try to map contract error codes
       const codeMatch = error?.message?.match(/error (\d+)/i);
