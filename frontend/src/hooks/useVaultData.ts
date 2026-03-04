@@ -26,8 +26,8 @@ const MOCK_DATA: VaultData = {
 
 const BTC_PRICE = 65_000; // mock price
 
-// Set to false when the vault contract is deployed on testnet/mainnet
-const USE_MOCK_DATA = true;
+// Set to false to use real contract data from testnet
+const USE_MOCK_DATA = false;
 
 function formatBtc(sats: number): string {
   return (sats / 1e8).toFixed(2);
