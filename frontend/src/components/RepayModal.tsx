@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { uintCV } from "@stacks/transactions";
+import { uintCV, contractPrincipalCV, Pc, PostConditionMode } from "@stacks/transactions";
 import { AmountInput } from "@/components/AmountInput";
 import { TransactionModal } from "@/components/TransactionModal";
 import { TransactionSummary, type SummaryRow } from "@/components/TransactionSummary";
@@ -45,13 +45,25 @@ export function RepayModal({
   ], [parsedAmount, remainingDebt]);
 
   const handleRepay = () => {
+    if (!address) return;
+    
     const [contractAddress, contractName] = CONTRACTS[DEFAULT_NETWORK].vault.split(".");
+    const [sbtcAddress, sbtcName] = CONTRACTS[DEFAULT_NETWORK].mockSbtc.split(".");
+    
     tx.execute(() => ({
       contractAddress,
       contractName,
       functionName: VAULT_FUNCTIONS.repay,
-      functionArgs: [uintCV(amountSats)],
-      postConditions: [],
+      functionArgs: [
+        uintCV(amountSats),
+        contractPrincipalCV(sbtcAddress, sbtcName),
+      ],
+      postConditionMode: PostConditionMode.Deny,
+      postConditions: [
+        Pc.principal(address)
+          .willSendLte(amountSats + 1000000) // Buffer for interest
+          .ft(`${sbtcAddress}.${sbtcName}`, "mock-sbtc"),
+      ],
     }));
   };
 
