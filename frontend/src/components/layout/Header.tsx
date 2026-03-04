@@ -6,7 +6,8 @@ import { WalletButton } from "@/components/WalletButton";
 import { cn } from "@/lib/utils";
 
 const NAV_LINKS = [
-  { label: "Dashboard", href: "/" },
+  { label: "Home", href: "/" },
+  { label: "Dashboard", href: "/dashboard" },
   { label: "Vault", href: "/vault" },
   { label: "Docs", href: "/docs", external: true },
 ];
@@ -76,13 +77,10 @@ export function Header() {
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.2 }}
         >
-          <motion.span
-            className="text-xs font-mono px-2 py-1 rounded-full border border-warning/30 text-warning bg-warning/10"
-            animate={{ opacity: [0.7, 1, 0.7] }}
-            transition={{ duration: 2, repeat: Infinity }}
-          >
-            Testnet
-          </motion.span>
+          <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-md bg-amber-500/10 border border-amber-500/40 text-amber-400">
+            <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
+            TESTNET
+          </span>
           <WalletButton />
         </motion.div>
 
@@ -135,8 +133,9 @@ export function Header() {
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.15 }}
               >
-                <span className="text-xs font-mono px-2 py-1 rounded-full border border-warning/30 text-warning bg-warning/10">
-                  Testnet
+                <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-md bg-amber-500/10 border border-amber-500/40 text-amber-400">
+                  <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
+                  TESTNET
                 </span>
                 <WalletButton />
               </motion.div>
