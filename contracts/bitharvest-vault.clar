@@ -324,3 +324,80 @@
     (ok amount)
   )
 )
+
+;; Repay borrowed sBTC
+(define-public (repay (amount uint) (token <ft-trait>))
+  (let (
+    (sender tx-sender)
+    (position (unwrap! (get-borrow-position sender) ERR-NO-DEBT))
+    (current-interest (calculate-accrued-interest sender))
+    (total-debt (+ (get principal-amount position) current-interest))
+    (repay-amount (if (> amount total-debt) total-debt amount))
+  )
+    ;; Validations
+    (asserts! (> amount u0) ERR-ZERO-AMOUNT)
+    (asserts! (> total-debt u0) ERR-NO-DEBT)
+    
+    ;; Transfer sBTC from user to vault
+    (try! (contract-call? token transfer repay-amount sender current-contract none))
+    
+    ;; Calculate how much goes to interest vs principal
+    (let (
+      (interest-payment (if (>= repay-amount current-interest) current-interest repay-amount))
+      (principal-payment (- repay-amount interest-payment))
+      (protocol-fee-amount (/ (* interest-payment PROTOCOL-FEE) u10000))
+      (new-principal (- (get principal-amount position) principal-payment))
+    )
+      ;; Update protocol fees
+      (var-set accumulated-protocol-fees (+ (var-get accumulated-protocol-fees) protocol-fee-amount))
+      
+      ;; Update or remove borrow position
+      (if (is-eq new-principal u0)
+        (map-delete borrow-positions sender)
+        (map-set borrow-positions sender {
+          principal-amount: new-principal,
+          accrued-interest: (- current-interest interest-payment),
+          last-update-block: stacks-block-height,
+          collateral-locked: (get collateral-locked position)
+        })
+      )
+      
+      ;; Update totals
+      (var-set total-borrows (- (var-get total-borrows) principal-payment))
+      
+      ;; Add repaid interest back to deposits (minus protocol fee) for yield distribution
+      (var-set total-deposits (+ (var-get total-deposits) (- interest-payment protocol-fee-amount)))
+      
+      (ok repay-amount)
+    )
+  )
+)
+
+;; =====================================
+;; Admin Functions
+;; =====================================
+
+;; Pause/unpause the vault
+(define-public (set-paused (paused bool))
+  (begin
+    (asserts! (is-eq tx-sender CONTRACT-OWNER) ERR-NOT-AUTHORIZED)
+    (var-set vault-paused paused)
+    (ok true)
+  )
+)
+
+;; Withdraw accumulated protocol fees
+(define-public (withdraw-fees (token <ft-trait>))
+  (let (
+    (fees (var-get accumulated-protocol-fees))
+  )
+    (asserts! (is-eq tx-sender CONTRACT-OWNER) ERR-NOT-AUTHORIZED)
+    (asserts! (> fees u0) ERR-ZERO-AMOUNT)
+    
+    ;; Transfer fees to owner (with-all-assets-unsafe needed for trait-based FT transfers)
+    (try! (as-contract? ((with-all-assets-unsafe))
+      (try! (contract-call? token transfer fees tx-sender CONTRACT-OWNER none))))
+    (var-set accumulated-protocol-fees u0)
+    (ok fees)
+  )
+)
