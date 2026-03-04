@@ -172,3 +172,59 @@
     u0
   )
 )
+
+;; Get estimated yield for deposits
+(define-read-only (get-estimated-yield (user principal))
+  (match (map-get? deposit-history user)
+    history
+      (let (
+        (blocks-elapsed (- stacks-block-height (get last-action-block history)))
+        (balance (get-user-balance user))
+        ;; Simple yield calculation
+        (estimated (/ (* (* balance SUPPLY-APY) blocks-elapsed) (* BLOCKS-PER-YEAR u10000)))
+      )
+        estimated
+      )
+    u0
+  )
+)
+
+;; Check if vault is paused
+(define-read-only (is-paused)
+  (var-get vault-paused)
+)
+
+;; =====================================
+;; Public Functions
+;; =====================================
+
+;; Deposit sBTC into the vault
+(define-public (deposit (amount uint) (token <ft-trait>))
+  (let (
+    (sender tx-sender)
+    (shares-to-mint (sbtc-to-shares amount))
+    (current-shares (get-user-shares sender))
+    (current-history (map-get? deposit-history sender))
+  )
+    ;; Validations
+    (asserts! (not (var-get vault-paused)) ERR-NOT-AUTHORIZED)
+    (asserts! (> amount u0) ERR-ZERO-AMOUNT)
+    
+    ;; Transfer sBTC from user to vault
+    (try! (contract-call? token transfer amount sender current-contract none))
+    
+    ;; Update state
+    (var-set total-deposits (+ (var-get total-deposits) amount))
+    (var-set total-shares (+ (var-get total-shares) shares-to-mint))
+    (map-set user-shares sender (+ current-shares shares-to-mint))
+    
+    ;; Update deposit history
+    (map-set deposit-history sender {
+      total-deposited: (+ (match current-history h (get total-deposited h) u0) amount),
+      first-deposit-block: (match current-history h (get first-deposit-block h) stacks-block-height),
+      last-action-block: stacks-block-height
+    })
+    
+    (ok shares-to-mint)
+  )
+)
