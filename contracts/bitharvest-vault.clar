@@ -52,3 +52,63 @@
     collateral-locked: uint      ;; sBTC locked as collateral
   }
 )
+
+;; Tracks deposit history for yield calculation
+(define-map deposit-history
+  principal
+  {
+    total-deposited: uint,
+    first-deposit-block: uint,
+    last-action-block: uint
+  }
+)
+
+;; =====================================
+;; Read-Only Functions
+;; =====================================
+
+;; Get total deposits in the vault
+(define-read-only (get-total-deposits)
+  (var-get total-deposits)
+)
+
+;; Get total borrowed from the vault
+(define-read-only (get-total-borrows)
+  (var-get total-borrows)
+)
+
+;; Get user's share balance
+(define-read-only (get-user-shares (user principal))
+  (default-to u0 (map-get? user-shares user))
+)
+
+;; Get user's borrow position
+(define-read-only (get-borrow-position (user principal))
+  (map-get? borrow-positions user)
+)
+
+;; Calculate share value in sBTC
+(define-read-only (shares-to-sbtc (shares uint))
+  (let (
+    (total-supply (var-get total-shares))
+    (total-assets (var-get total-deposits))
+  )
+    (if (is-eq total-supply u0)
+      shares
+      (/ (* shares total-assets) total-supply)
+    )
+  )
+)
+
+;; Calculate sBTC value in shares
+(define-read-only (sbtc-to-shares (amount uint))
+  (let (
+    (total-supply (var-get total-shares))
+    (total-assets (var-get total-deposits))
+  )
+    (if (or (is-eq total-supply u0) (is-eq total-assets u0))
+      amount
+      (/ (* amount total-supply) total-assets)
+    )
+  )
+)
