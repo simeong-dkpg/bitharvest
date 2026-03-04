@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { callReadOnly, parseClarityUint } from "@/lib/stacks/api";
+import { callReadOnly, parseClarityUint, encodePrincipal } from "@/lib/stacks/api";
 import { CONTRACTS, DEFAULT_NETWORK } from "@/lib/stacks/config";
 
 interface UserPosition {
@@ -50,11 +50,11 @@ function fmtUsd(sats: number): string {
 
 async function fetchUserPosition(address: string): Promise<UserPosition> {
   const contractId = CONTRACTS[DEFAULT_NETWORK].vault;
-  const principalArg = `0x0516${address}`; // simplified — real impl needs proper Clarity encoding
+  const principalArg = encodePrincipal(address);
 
   try {
     const [sharesRes, balanceRes, maxBorrowRes, borrowRes, yieldRes] = await Promise.all([
-      callReadOnly(contractId, "get-shares", [principalArg], DEFAULT_NETWORK),
+      callReadOnly(contractId, "get-user-shares", [principalArg], DEFAULT_NETWORK),
       callReadOnly(contractId, "get-user-balance", [principalArg], DEFAULT_NETWORK),
       callReadOnly(contractId, "get-max-borrow", [principalArg], DEFAULT_NETWORK),
       callReadOnly(contractId, "get-borrow-position", [principalArg], DEFAULT_NETWORK),

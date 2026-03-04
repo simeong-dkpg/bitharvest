@@ -8,10 +8,14 @@ import { AnimatedBackground } from "@/components/AnimatedBackground";
 import { MagneticButton } from "@/components/MagneticButton";
 import { TextReveal } from "@/components/TextReveal";
 import { GlowCard } from "@/components/GlowCard";
+import { TestnetBanner } from "@/components/TestnetBanner";
+import { useVaultData } from "@/hooks/useVaultData";
 
 
 const Index = () => {
   const navigate = useNavigate();
+  const { data: vault, isLoading } = useVaultData();
+  
   return (
     <PageWrapper>
       {/* Hero Section */}
@@ -59,7 +63,7 @@ const Index = () => {
               <MagneticButton>
                 <Button
                   size="lg"
-                  onClick={() => navigate("/vault")}
+                  onClick={() => navigate("/dashboard")}
                   className="bg-gradient-to-r from-primary to-orange-400 text-primary-foreground font-bold text-lg px-8 hover:scale-[1.02] transition-transform glow-orange min-touch-target group"
                   aria-label="Launch the BitHarvest vault app"
                 >
@@ -86,9 +90,9 @@ const Index = () => {
             className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-16 max-w-4xl mx-auto"
           >
             {[
-              { icon: Vault, label: "Total Value Locked", value: "142.5 sBTC", subValue: "≈ $9,262,500", change: { value: "12.3%", positive: true }, delay: 0 },
-              { icon: TrendingUp, label: "Supply APY", value: "3.2%", subValue: "Earn on deposits", change: { value: "0.3%", positive: true }, delay: 0.1 },
-              { icon: Percent, label: "Borrow APY", value: "5.8%", subValue: "Variable rate", change: { value: "0.1%", positive: false }, delay: 0.2 },
+              { icon: Vault, label: "Total Value Locked", value: `${vault?.tvlBtc ?? "0"} sBTC`, subValue: `≈ $${vault?.tvlUsd ?? "0"}`, change: { value: "12.3%", positive: true }, delay: 0 },
+              { icon: TrendingUp, label: "Supply APY", value: `${vault?.supplyApy ?? "0"}%`, subValue: "Earn on deposits", change: { value: "0.3%", positive: true }, delay: 0.1 },
+              { icon: Percent, label: "Borrow APY", value: `${vault?.borrowApy ?? "0"}%`, subValue: "Variable rate", change: { value: "0.1%", positive: false }, delay: 0.2 },
             ].map((stat) => (
               <motion.div
                 key={stat.label}
@@ -112,6 +116,9 @@ const Index = () => {
               </motion.div>
             ))}
           </motion.div>
+
+          {/* Testnet Mode Banner */}
+          <TestnetBanner />
         </div>
       </section>
 
