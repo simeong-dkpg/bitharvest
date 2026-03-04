@@ -228,3 +228,99 @@
     (ok shares-to-mint)
   )
 )
+
+;; Withdraw sBTC from the vault
+(define-public (withdraw (shares uint) (token <ft-trait>))
+  (let (
+    (sender tx-sender)
+    (current-shares (get-user-shares sender))
+    (sbtc-amount (shares-to-sbtc shares))
+    (position (get-borrow-position sender))
+  )
+    ;; Validations
+    (asserts! (not (var-get vault-paused)) ERR-NOT-AUTHORIZED)
+    (asserts! (> shares u0) ERR-ZERO-AMOUNT)
+    (asserts! (>= current-shares shares) ERR-INSUFFICIENT-BALANCE)
+    (asserts! (<= sbtc-amount (var-get total-deposits)) ERR-VAULT-EMPTY)
+    
+    ;; Check if user has outstanding borrow - ensure collateral remains sufficient
+    (match position
+      pos 
+        (let (
+          (remaining-shares (- current-shares shares))
+          (remaining-value (shares-to-sbtc remaining-shares))
+          (total-debt (+ (get principal-amount pos) (calculate-accrued-interest sender)))
+          (required-collateral (/ (* total-debt COLLATERAL-RATIO) u10000))
+        )
+          (asserts! (>= remaining-value required-collateral) ERR-INSUFFICIENT-COLLATERAL)
+        )
+      true
+    )
+    
+    ;; Transfer sBTC to user (with-all-assets-unsafe needed for trait-based FT transfers)
+    (try! (as-contract? ((with-all-assets-unsafe))
+      (try! (contract-call? token transfer sbtc-amount tx-sender sender none))))
+    
+    ;; Update state
+    (var-set total-deposits (- (var-get total-deposits) sbtc-amount))
+    (var-set total-shares (- (var-get total-shares) shares))
+    (map-set user-shares sender (- current-shares shares))
+    
+    ;; Update deposit history
+    (match (map-get? deposit-history sender)
+      history
+        (map-set deposit-history sender (merge history { last-action-block: stacks-block-height }))
+      true
+    )
+    
+    (ok sbtc-amount)
+  )
+)
+
+;; Borrow sBTC against collateral
+(define-public (borrow (amount uint) (token <ft-trait>))
+  (let (
+    (sender tx-sender)
+    (user-balance (get-user-balance sender))
+    (max-borrow (get-max-borrow sender))
+    (existing-position (get-borrow-position sender))
+  )
+    ;; Validations
+    (asserts! (not (var-get vault-paused)) ERR-NOT-AUTHORIZED)
+    (asserts! (> amount u0) ERR-ZERO-AMOUNT)
+    (asserts! (<= amount max-borrow) ERR-EXCEEDS-MAX-BORROW)
+    (asserts! (<= amount (var-get total-deposits)) ERR-VAULT-EMPTY)
+    
+    ;; Transfer sBTC to borrower (with-all-assets-unsafe needed for trait-based FT transfers)
+    (try! (as-contract? ((with-all-assets-unsafe))
+      (try! (contract-call? token transfer amount tx-sender sender none))))
+    
+    ;; Update or create borrow position
+    (match existing-position
+      pos
+        ;; Update existing position
+        (let (
+          (current-interest (calculate-accrued-interest sender))
+        )
+          (map-set borrow-positions sender {
+            principal-amount: (+ (get principal-amount pos) amount),
+            accrued-interest: current-interest,
+            last-update-block: stacks-block-height,
+            collateral-locked: user-balance
+          })
+        )
+      ;; Create new position
+      (map-set borrow-positions sender {
+        principal-amount: amount,
+        accrued-interest: u0,
+        last-update-block: stacks-block-height,
+        collateral-locked: user-balance
+      })
+    )
+    
+    ;; Update totals
+    (var-set total-borrows (+ (var-get total-borrows) amount))
+    
+    (ok amount)
+  )
+)
