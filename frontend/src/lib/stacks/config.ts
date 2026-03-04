@@ -19,16 +19,16 @@ export type NetworkType = keyof typeof NETWORK_CONFIG;
 
 export const DEFAULT_NETWORK: NetworkType = "testnet";
 
-// Contract addresses
+// Contract addresses - DEPLOYED ON TESTNET
 export const CONTRACTS = {
   testnet: {
-    vault: "ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM.sbtc-vault-v1",
-    sbtc: "ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM.sbtc-token",
-    mockSbtc: "ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM.mock-sbtc",
+    vault: "ST33S3T4B78TTTVNZW687YY6KTN7SYNA79PZ7M0KN.bitharvest-vault",
+    sbtc: "ST1F7QA2MDF17S807EPA36TSS8AMEFY4KA9TVGWXT.sbtc-token", // Official testnet sBTC
+    mockSbtc: "ST33S3T4B78TTTVNZW687YY6KTN7SYNA79PZ7M0KN.mock-sbtc", // Self-service faucet
   },
   mainnet: {
     vault: "", // TBD
-    sbtc: "", // TBD
+    sbtc: "SM3VDXK3WZZSA84XXFKAFAF15NNZX32CTSG82JFQ4.sbtc-token",
     mockSbtc: "", // N/A on mainnet
   },
 } as const;
