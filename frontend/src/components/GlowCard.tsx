@@ -2,12 +2,13 @@ import { ReactNode, useCallback, useRef } from "react";
 import { useReducedMotion } from "framer-motion";
 import { cn } from "@/lib/utils";
 
-interface GlowCardProps {
+export interface GlowCardProps {
   children: ReactNode;
   className?: string;
+  onClick?: () => void;
 }
 
-export function GlowCard({ children, className }: GlowCardProps) {
+export function GlowCard({ children, className, onClick }: GlowCardProps) {
   const prefersReduced = useReducedMotion();
   const ref = useRef<HTMLDivElement>(null);
 
@@ -32,9 +33,10 @@ export function GlowCard({ children, className }: GlowCardProps) {
   return (
     <div
       ref={ref}
+      onClick={onClick}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
-      className={cn("relative group", className)}
+      className={cn("relative group", onClick && "cursor-pointer", className)}
       style={
         {
           "--glow-x": "50%",
