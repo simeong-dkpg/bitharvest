@@ -9,7 +9,7 @@ const NAV_LINKS = [
   { label: "Home", href: "/" },
   { label: "Dashboard", href: "/dashboard" },
   { label: "Vault", href: "/vault" },
-  { label: "Docs", href: "/docs", external: true },
+  { label: "Docs", href: "/docs" },
 ];
 
 export function Header() {

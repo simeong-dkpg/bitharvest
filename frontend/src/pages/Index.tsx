@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { TrendingUp, Vault, Percent, ArrowRight } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { StatCard } from "@/components/StatCard";
 import { PageWrapper, childVariants } from "@/components/layout/PageWrapper";
@@ -72,14 +72,16 @@ const Index = () => {
                 </Button>
               </MagneticButton>
               <MagneticButton>
-                <Button
-                  size="lg"
-                  variant="outline"
-                  className="text-lg px-8 border-border hover:bg-secondary min-touch-target"
-                  aria-label="Read the documentation"
-                >
-                  Read Docs
-                </Button>
+                <Link to="/docs">
+                  <Button
+                    size="lg"
+                    variant="outline"
+                    className="text-lg px-8 border-border hover:bg-secondary min-touch-target"
+                    aria-label="Read the documentation"
+                  >
+                    Read Docs
+                  </Button>
+                </Link>
               </MagneticButton>
             </motion.div>
           </motion.div>

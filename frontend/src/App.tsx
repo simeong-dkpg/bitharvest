@@ -14,6 +14,7 @@ import NotFound from "./pages/NotFound";
 const Index = lazy(() => import("./pages/Index"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const VaultPage = lazy(() => import("./pages/Vault"));
+const Docs = lazy(() => import("./pages/Docs"));
 
 const queryClient = new QueryClient();
 
@@ -33,6 +34,7 @@ const App = () => (
                     <Route path="/" element={<Index />} />
                     <Route path="/dashboard" element={<Dashboard />} />
                     <Route path="/vault" element={<VaultPage />} />
+                    <Route path="/docs" element={<Docs />} />
                     <Route path="*" element={<NotFound />} />
                   </Routes>
                 </Suspense>
