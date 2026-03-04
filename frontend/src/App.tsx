@@ -12,6 +12,7 @@ import { WalletProvider } from "@/contexts/WalletContext";
 import NotFound from "./pages/NotFound";
 
 const Index = lazy(() => import("./pages/Index"));
+const Dashboard = lazy(() => import("./pages/Dashboard"));
 const VaultPage = lazy(() => import("./pages/Vault"));
 
 const queryClient = new QueryClient();
@@ -30,6 +31,7 @@ const App = () => (
                 <Suspense fallback={<VaultSkeleton />}>
                   <Routes>
                     <Route path="/" element={<Index />} />
+                    <Route path="/dashboard" element={<Dashboard />} />
                     <Route path="/vault" element={<VaultPage />} />
                     <Route path="*" element={<NotFound />} />
                   </Routes>

@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { uintCV } from "@stacks/transactions";
+import { uintCV, contractPrincipalCV, Pc, PostConditionMode } from "@stacks/transactions";
 import { AmountInput } from "@/components/AmountInput";
 import { TransactionModal } from "@/components/TransactionModal";
 import { TransactionSummary, type SummaryRow } from "@/components/TransactionSummary";
@@ -50,12 +50,23 @@ export function BorrowModal({
 
   const handleBorrow = () => {
     const [contractAddress, contractName] = CONTRACTS[DEFAULT_NETWORK].vault.split(".");
+    const [sbtcAddress, sbtcName] = CONTRACTS[DEFAULT_NETWORK].mockSbtc.split(".");
+    const vaultPrincipal = CONTRACTS[DEFAULT_NETWORK].vault;
+    
     tx.execute(() => ({
       contractAddress,
       contractName,
       functionName: VAULT_FUNCTIONS.borrow,
-      functionArgs: [uintCV(amountSats)],
-      postConditions: [],
+      functionArgs: [
+        uintCV(amountSats),
+        contractPrincipalCV(sbtcAddress, sbtcName),
+      ],
+      postConditionMode: PostConditionMode.Deny,
+      postConditions: [
+        Pc.principal(vaultPrincipal)
+          .willSendLte(amountSats)
+          .ft(`${sbtcAddress}.${sbtcName}`, "mock-sbtc"),
+      ],
     }));
   };
 

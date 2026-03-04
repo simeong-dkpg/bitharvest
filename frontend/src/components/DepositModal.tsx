@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { uintCV } from "@stacks/transactions";
+import { uintCV, contractPrincipalCV, Pc, PostConditionMode } from "@stacks/transactions";
 import { AmountInput } from "@/components/AmountInput";
 import { TransactionModal } from "@/components/TransactionModal";
 import { TransactionSummary, type SummaryRow } from "@/components/TransactionSummary";
@@ -47,13 +47,25 @@ export function DepositModal({
   ], [parsedAmount, estimatedShares, newBalance, supplyApy]);
 
   const handleDeposit = () => {
+    if (!address) return;
+    
     const [contractAddress, contractName] = CONTRACTS[DEFAULT_NETWORK].vault.split(".");
+    const [sbtcAddress, sbtcName] = CONTRACTS[DEFAULT_NETWORK].mockSbtc.split("."); // Use mock for testnet
+    
     tx.execute(() => ({
       contractAddress,
       contractName,
       functionName: VAULT_FUNCTIONS.deposit,
-      functionArgs: [uintCV(amountSats)],
-      postConditions: [],
+      functionArgs: [
+        uintCV(amountSats),
+        contractPrincipalCV(sbtcAddress, sbtcName),
+      ],
+      postConditionMode: PostConditionMode.Deny,
+      postConditions: [
+        Pc.principal(address)
+          .willSendLte(amountSats)
+          .ft(`${sbtcAddress}.${sbtcName}`, "mock-sbtc"),
+      ],
     }));
   };
 
