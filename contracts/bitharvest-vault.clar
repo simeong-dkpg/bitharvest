@@ -112,3 +112,63 @@
     )
   )
 )
+
+;; Get user's withdrawable balance (shares converted to sBTC)
+(define-read-only (get-user-balance (user principal))
+  (shares-to-sbtc (get-user-shares user))
+)
+
+;; Calculate maximum borrowable amount for a user
+(define-read-only (get-max-borrow (user principal))
+  (let (
+    (user-balance (get-user-balance user))
+    (existing-position (get-borrow-position user))
+    (current-debt (match existing-position
+      pos (+ (get principal-amount pos) (get accrued-interest pos))
+      u0
+    ))
+  )
+    ;; Max borrow = (collateral * 10000 / COLLATERAL-RATIO) - current-debt
+    (if (> user-balance u0)
+      (let (
+        (max-against-collateral (/ (* user-balance u10000) COLLATERAL-RATIO))
+      )
+        (if (> max-against-collateral current-debt)
+          (- max-against-collateral current-debt)
+          u0
+        )
+      )
+      u0
+    )
+  )
+)
+
+;; Get current utilization rate (borrows / deposits in basis points)
+(define-read-only (get-utilization-rate)
+  (let (
+    (deposits (var-get total-deposits))
+    (borrows (var-get total-borrows))
+  )
+    (if (is-eq deposits u0)
+      u0
+      (/ (* borrows u10000) deposits)
+    )
+  )
+)
+
+;; Calculate accrued interest for a position
+(define-read-only (calculate-accrued-interest (user principal))
+  (match (get-borrow-position user)
+    position
+      (let (
+        (blocks-elapsed (- stacks-block-height (get last-update-block position)))
+        (principal-amt (get principal-amount position))
+        (existing-interest (get accrued-interest position))
+        ;; Simple interest: principal * rate * time / (blocks-per-year * 10000)
+        (new-interest (/ (* (* principal-amt BORROW-APY) blocks-elapsed) (* BLOCKS-PER-YEAR u10000)))
+      )
+        (+ existing-interest new-interest)
+      )
+    u0
+  )
+)
