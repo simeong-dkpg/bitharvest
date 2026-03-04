@@ -63,3 +63,47 @@
 (define-read-only (get-token-uri)
   (ok (var-get token-uri))
 )
+
+;; ---------------------------------------------------------
+;; Minting Functions (For Testing)
+;; ---------------------------------------------------------
+
+;; Mint tokens to any address (only contract owner)
+(define-public (mint (amount uint) (recipient principal))
+  (begin
+    (asserts! (is-eq tx-sender CONTRACT-OWNER) ERR-NOT-AUTHORIZED)
+    (ft-mint? mock-sbtc amount recipient)
+  )
+)
+
+;; Faucet - anyone can mint up to 10 mock sBTC at a time
+;; This simulates a testnet faucet
+(define-constant MAX-FAUCET-AMOUNT u1000000000) ;; 10 sBTC (8 decimals)
+
+(define-public (faucet (amount uint))
+  (begin
+    (asserts! (<= amount MAX-FAUCET-AMOUNT) (err u102))
+    (ft-mint? mock-sbtc amount tx-sender)
+  )
+)
+
+;; Burn tokens
+(define-public (burn (amount uint))
+  (begin
+    (asserts! (>= (ft-get-balance mock-sbtc tx-sender) amount) ERR-INSUFFICIENT-BALANCE)
+    (ft-burn? mock-sbtc amount tx-sender)
+  )
+)
+
+;; ---------------------------------------------------------
+;; Admin Functions
+;; ---------------------------------------------------------
+
+;; Update token URI (only owner)
+(define-public (set-token-uri (new-uri (optional (string-utf8 256))))
+  (begin
+    (asserts! (is-eq tx-sender CONTRACT-OWNER) ERR-NOT-AUTHORIZED)
+    (var-set token-uri new-uri)
+    (ok true)
+  )
+)
