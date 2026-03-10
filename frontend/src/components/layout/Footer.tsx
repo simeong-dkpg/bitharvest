@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { ExternalLink } from "lucide-react";
+import { BitHarvestLogo } from "@/components/BitHarvestLogo";
 
 const FOOTER_LINKS = [
   { label: "Documentation", href: "#" },
@@ -18,14 +19,8 @@ export function Footer() {
       transition={{ duration: 0.5 }}
     >
       <div className="container py-8 flex flex-col md:flex-row items-center justify-between gap-4">
-        <div className="flex items-center gap-2">
-          <motion.div
-            className="h-6 w-6 rounded-sm bg-gradient-to-br from-primary to-orange-400 flex items-center justify-center rotate-45"
-            animate={{ rotate: [45, 55, 45] }}
-            transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
-          >
-            <span className="text-primary-foreground font-bold text-[10px] -rotate-45">B</span>
-          </motion.div>
+        <div className="flex items-center gap-2.5">
+          <BitHarvestLogo size="sm" animate={false} />
           <span className="text-sm text-muted-foreground">
             BitHarvest Protocol · Testnet
           </span>

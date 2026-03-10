@@ -3,6 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X } from "lucide-react";
 import { WalletButton } from "@/components/WalletButton";
+import { BitHarvestLogo } from "@/components/BitHarvestLogo";
 import { cn } from "@/lib/utils";
 
 const NAV_LINKS = [
@@ -28,15 +29,8 @@ export function Header() {
 
       <div className="container flex h-16 items-center justify-between">
         {/* Logo */}
-        <Link to="/" className="flex items-center gap-2 group">
-          <motion.div
-            className="h-8 w-8 rounded-md bg-gradient-to-br from-primary to-orange-400 flex items-center justify-center rotate-45 group-hover:rotate-[55deg] transition-transform duration-300"
-            initial={{ scale: 0.8, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ type: "spring", stiffness: 400, damping: 15 }}
-          >
-            <span className="text-primary-foreground font-bold text-sm -rotate-45">B</span>
-          </motion.div>
+        <Link to="/" className="flex items-center gap-2.5 group">
+          <BitHarvestLogo size="sm" className="group-hover:scale-105 transition-transform duration-300" />
           <span className="text-lg font-bold tracking-tight">
             Bit<span className="text-gradient-accent">Harvest</span>
           </span>

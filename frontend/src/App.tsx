@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
+import { TestnetBanner } from "@/components/TestnetBanner";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { VaultSkeleton } from "@/components/VaultSkeleton";
 import { WalletProvider } from "@/contexts/WalletContext";
@@ -27,6 +28,7 @@ const App = () => (
         <BrowserRouter>
           <div className="flex min-h-screen flex-col">
             <Header />
+            <TestnetBanner />
             <main className="flex-1" id="main-content">
               <ErrorBoundary>
                 <Suspense fallback={<VaultSkeleton />}>

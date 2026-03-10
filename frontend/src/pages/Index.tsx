@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { TrendingUp, Vault, Percent, ArrowRight } from "lucide-react";
+import { BitHarvestLogo } from "@/components/BitHarvestLogo";
 import { useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { StatCard } from "@/components/StatCard";
@@ -8,7 +9,6 @@ import { AnimatedBackground } from "@/components/AnimatedBackground";
 import { MagneticButton } from "@/components/MagneticButton";
 import { TextReveal } from "@/components/TextReveal";
 import { GlowCard } from "@/components/GlowCard";
-import { TestnetBanner } from "@/components/TestnetBanner";
 import { useVaultData } from "@/hooks/useVaultData";
 
 
@@ -26,9 +26,7 @@ const Index = () => {
         <div className="container relative py-24 md:py-32 lg:py-40">
           <motion.div variants={childVariants} className="flex flex-col items-center text-center max-w-3xl mx-auto">
             {/* Logo */}
-            <div className="h-16 w-16 rounded-xl bg-gradient-to-br from-primary to-orange-400 flex items-center justify-center rotate-45 mb-8 glow-orange-lg">
-              <span className="text-primary-foreground font-black text-2xl -rotate-45">B</span>
-            </div>
+            <BitHarvestLogo size="xl" className="mb-8" />
 
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-black tracking-tight mb-4">
               <TextReveal mode="word" stagger={0.06}>
@@ -119,8 +117,6 @@ const Index = () => {
             ))}
           </motion.div>
 
-          {/* Testnet Mode Banner */}
-          <TestnetBanner />
         </div>
       </section>
 
